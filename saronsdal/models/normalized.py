@@ -217,9 +217,10 @@ class Booking:
         for manual review instead.
         """
         if self.vehicle.vehicle_type == "unknown" and self.vehicle.body_length_m is None:
-            # Could be an indoor booking; flag but don't exclude
-            return True
-        return True  # Default to True; exclusion is a staff decision
+            # No equipment type or dimensions — likely an indoor booking
+            # (Internatet / Campinghytte) that leaked through ingestion.
+            return False
+        return True
 
     @property
     def is_low_confidence(self) -> bool:

@@ -13,6 +13,7 @@ dimensions, and config values.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -27,15 +28,12 @@ from saronsdal.normalization.length_parser import parse_dimensions
 # ---------------------------------------------------------------------------
 
 _CONFIG_PATH = Path(__file__).parent.parent / "config" / "equipment.yaml"
-_config: Optional[Dict[str, Any]] = None
 
 
+@lru_cache(maxsize=1)
 def _load_config() -> Dict[str, Any]:
-    global _config
-    if _config is None:
-        with open(_CONFIG_PATH, encoding="utf-8") as fh:
-            _config = yaml.safe_load(fh)
-    return _config
+    with open(_CONFIG_PATH, encoding="utf-8") as fh:
+        return yaml.safe_load(fh)
 
 
 # ---------------------------------------------------------------------------
@@ -48,8 +46,7 @@ def _bool_field(raw: str) -> bool:
 
 
 _PLATE_PATTERN = re.compile(
-    r"^[A-ZÆØÅ]{2}\s?\d{4,5}$"   # e.g. "AB12345" or "AB 12345"
-    r"|^[A-ZÆØÅ]{1,3}\s?\d{2,5}$",  # older or foreign plates
+    r"^[A-ZÆØÅ]{1,3}\s?\d{2,5}$",  # Norwegian and older/foreign plates
     re.IGNORECASE,
 )
 

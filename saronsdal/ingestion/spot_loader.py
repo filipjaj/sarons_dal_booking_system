@@ -25,6 +25,7 @@ import ftfy
 import pandas as pd
 
 from saronsdal.models.normalized import Spot
+from saronsdal.spatial.topology_loader import normalise_spot_id
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +200,7 @@ def load_spots(path: Path) -> List[Spot]:
             return _parse_bool_flag(row.get(col, ""))
 
         spot = Spot(
-            spot_id=spot_id_raw,
+            spot_id=normalise_spot_id(spot_id_raw),
             section=ftfy.fix_text(area_raw),
             row=row_letter,
             position=position,

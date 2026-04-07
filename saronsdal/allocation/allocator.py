@@ -159,7 +159,7 @@ NEAR_REF_CONFIDENCE_THRESHOLD: float = 0.65
 #: a personal name wish.  These links are made symmetric: if A → B via
 #: group_reference, B → A is injected so that after *any* member is placed
 #: the rest of the place-group can cluster toward it.
-SYMMETRIC_REF_TYPES: frozenset = frozenset({"group_reference"})
+SYMMETRIC_REF_TYPES: frozenset[str] = frozenset({"group_reference"})
 
 
 def _build_near_ref_map(

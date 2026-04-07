@@ -17,6 +17,10 @@ from saronsdal.llm.candidate_builder import (
     WeakClusterCandidate,
 )
 
+# Maximum characters of raw booking text to include in LLM prompts.
+# Prevents excessively long user-supplied text from dominating the prompt.
+_MAX_RAW_TEXT_LEN = 500
+
 # ---------------------------------------------------------------------------
 # Shared system instruction (attached to model, not repeated per prompt)
 # ---------------------------------------------------------------------------
@@ -212,7 +216,7 @@ def build_near_text_prompt(
     return (
         f"Booking {cand.booking_no} ({cand.full_name}, "
         f"{cand.check_in}–{cand.check_out}) wrote they want to stay near:\n"
-        f"{json.dumps(cand.raw_near_texts, ensure_ascii=False)}\n\n"
+        f"{json.dumps([t[:_MAX_RAW_TEXT_LEN] for t in cand.raw_near_texts], ensure_ascii=False)}\n\n"
         "From the co-attending guest list below, identify which booking each "
         "fragment refers to.\n"
         "- Use 'group_reference' for fragments referring to a group (not one person)\n"
@@ -234,7 +238,7 @@ def build_preference_prompt(candidates: List[PreferenceCandidate]) -> str:
         {
             "booking_no": c.booking_no,
             "full_name": c.full_name,
-            "raw_text": c.raw_text,
+            "raw_text": c.raw_text[:_MAX_RAW_TEXT_LEN],
             "already_extracted_sections": c.extracted_sections,
             "detected_signals": c.missing_signals,
         }
@@ -302,7 +306,7 @@ def build_subsection_prompt(candidates: List[SubsectionCandidate]) -> str:
         {
             "booking_no": c.booking_no,
             "full_name": c.full_name,
-            "raw_text": c.raw_text,
+            "raw_text": c.raw_text[:_MAX_RAW_TEXT_LEN],
             "extracted_section": c.extracted_section,
             "already_captured_rows": c.already_captured_rows,
             "unresolved_patterns": c.unresolved_patterns,

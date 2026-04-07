@@ -24,8 +24,6 @@ import csv
 import json
 import logging
 import sys
-from dataclasses import asdict
-from datetime import date
 from pathlib import Path
 from typing import Any, List
 
@@ -52,19 +50,7 @@ logger = logging.getLogger(__name__)
 # Serialisation helpers
 # ---------------------------------------------------------------------------
 
-def _serialisable(obj: Any) -> Any:
-    """Recursively convert dataclass / date / set to JSON-serialisable types."""
-    if isinstance(obj, date):
-        return obj.isoformat()
-    if isinstance(obj, set):
-        return sorted(obj)
-    if hasattr(obj, "__dataclass_fields__"):
-        return {k: _serialisable(v) for k, v in asdict(obj).items()}
-    if isinstance(obj, list):
-        return [_serialisable(i) for i in obj]
-    if isinstance(obj, dict):
-        return {k: _serialisable(v) for k, v in obj.items()}
-    return obj
+from saronsdal.cli.utils import serialisable as _serialisable
 
 
 def _write_json(data: Any, path: Path) -> None:

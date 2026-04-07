@@ -21,7 +21,7 @@ import argparse
 import json
 import logging
 import sys
-from dataclasses import asdict
+import dataclasses
 from datetime import date
 from pathlib import Path
 from typing import Any, List, Optional
@@ -29,22 +29,21 @@ from typing import Any, List, Optional
 logger = logging.getLogger(__name__)
 
 
+def _dataclass_default(cls, field_name: str) -> Any:
+    """Return the default value for a dataclass field, or None if no default."""
+    f = cls.__dataclass_fields__[field_name]
+    if f.default is not dataclasses.MISSING:
+        return f.default
+    if f.default_factory is not dataclasses.MISSING:
+        return f.default_factory()
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Serialisation helper
 # ---------------------------------------------------------------------------
 
-def _serialisable(obj: Any) -> Any:
-    if isinstance(obj, date):
-        return obj.isoformat()
-    if isinstance(obj, set):
-        return sorted(obj)
-    if hasattr(obj, "__dataclass_fields__"):
-        return {k: _serialisable(v) for k, v in asdict(obj).items()}
-    if isinstance(obj, list):
-        return [_serialisable(i) for i in obj]
-    if isinstance(obj, dict):
-        return {k: _serialisable(v) for k, v in obj.items()}
-    return obj
+from saronsdal.cli.utils import serialisable as _serialisable
 
 
 # ---------------------------------------------------------------------------
@@ -88,8 +87,7 @@ def _load_bookings(path: Path):
                 rows.append(SectionRow(section=sr["section"], row=sr["row"]))
             r["preferred_section_rows"] = rows
             request = SpotRequest(**{
-                k: r.get(k, SpotRequest.__dataclass_fields__[k].default
-                          if hasattr(SpotRequest.__dataclass_fields__[k].default, '__class__') else None)
+                k: r.get(k, _dataclass_default(SpotRequest, k))
                 for k in SpotRequest.__dataclass_fields__
             })
 

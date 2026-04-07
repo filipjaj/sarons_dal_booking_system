@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 #: Section names that correspond to outdoor camping spots (caravan / motorhome
 #: / tent).  Entries whose section name is not in this set are treated as
 #: non-camping and excluded from the returned triplet list.
-CAMPING_SECTIONS: frozenset = frozenset({
+CAMPING_SECTIONS: frozenset[str] = frozenset({
     "Bedehuset",
     "Bibelskolen",
     "Egelandsletta",

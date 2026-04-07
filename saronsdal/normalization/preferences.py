@@ -7,6 +7,7 @@ Output goes into SpotRequest and RawGroupSignals.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -22,31 +23,26 @@ from saronsdal.models.raw import RawBooking
 
 _SECTIONS_CONFIG_PATH = Path(__file__).parent.parent / "config" / "sections.yaml"
 _GROUP_CONFIG_PATH = Path(__file__).parent.parent / "config" / "group_aliases.yaml"
-_sections_cfg: Optional[Dict] = None
-_group_cfg: Optional[Dict] = None
 
 
+@lru_cache(maxsize=1)
 def _load_sections_cfg() -> Dict:
-    global _sections_cfg
-    if _sections_cfg is None:
-        with open(_SECTIONS_CONFIG_PATH, encoding="utf-8") as fh:
-            _sections_cfg = yaml.safe_load(fh)
-    return _sections_cfg
+    with open(_SECTIONS_CONFIG_PATH, encoding="utf-8") as fh:
+        return yaml.safe_load(fh)
 
 
+@lru_cache(maxsize=1)
 def _load_group_cfg() -> Dict:
-    global _group_cfg
-    if _group_cfg is None:
-        with open(_GROUP_CONFIG_PATH, encoding="utf-8") as fh:
-            _group_cfg = yaml.safe_load(fh)
-    return _group_cfg
+    with open(_GROUP_CONFIG_PATH, encoding="utf-8") as fh:
+        return yaml.safe_load(fh)
 
 
 # ---------------------------------------------------------------------------
 # Section alias lookup
 # ---------------------------------------------------------------------------
 
-def _build_alias_to_canonical() -> Dict[str, str]:
+@lru_cache(maxsize=1)
+def _get_alias_to_section() -> Dict[str, str]:
     """Build a lowercase alias → canonical section name lookup."""
     cfg = _load_sections_cfg()
     mapping: Dict[str, str] = {}
@@ -55,16 +51,6 @@ def _build_alias_to_canonical() -> Dict[str, str]:
         for alias in sec.get("aliases", []):
             mapping[alias.lower()] = canonical
     return mapping
-
-
-_alias_to_section: Optional[Dict[str, str]] = None
-
-
-def _get_alias_to_section() -> Dict[str, str]:
-    global _alias_to_section
-    if _alias_to_section is None:
-        _alias_to_section = _build_alias_to_canonical()
-    return _alias_to_section
 
 
 def _is_section_name(text: str) -> bool:
@@ -108,7 +94,7 @@ def _extract_spot_ids(text: str) -> List[str]:
 
     def _expand_range(prefix1: str, start: int, prefix2: str, end: int) -> List[str]:
         p = (prefix2 if prefix2 else prefix1).upper()
-        return [f"{prefix1.upper()}{i}" for i in range(start, end + 1)]
+        return [f"{p}{i}" for i in range(start, end + 1)]
 
     # Range with dash or en-dash.
     for m in _SPOT_RANGE_RE.finditer(text_upper):
